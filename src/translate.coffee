@@ -48,6 +48,8 @@ type2default_value = (type)->
   GTE: '>='
   LTE: '<='
   
+  SHR : '>>'
+  SHL : '<<'
   
   BIT_AND : '&'
   BIT_OR  : '|'

@@ -154,6 +154,8 @@ describe 'translate section', ()->
         c = a & b;
         c = a | b;
         c = a ^ b;
+        c = a << b;
+        c = a >> b;
         c++;
         ++c;
         c--;
@@ -195,6 +197,8 @@ describe 'translate section', ()->
           c = (a & b);
           c = (a | b);
           c = (a ^ b);
+          c = (a << b);
+          c = (a >> b);
           c+=1;
           c+=1;
           c-=1;
@@ -240,6 +244,8 @@ describe 'translate section', ()->
         c = a & b;
         c = a | b;
         c = a ^ b;
+        c = a << b;
+        c = a >> b;
         c++;
         ++c;
         c--;
@@ -277,6 +283,8 @@ describe 'translate section', ()->
           c = (a & b);
           c = (a | b);
           c = (a ^ b);
+          c = (a << b);
+          c = (a >> b);
           c+=1;
           c+=1;
           c-=1;

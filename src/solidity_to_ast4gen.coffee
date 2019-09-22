@@ -15,6 +15,9 @@ bin_op_map =
   '&&' : 'BOOL_AND'
   '||' : 'BOOL_OR'
   
+  '>>' : 'SHR'
+  '<<' : 'SHL'
+  
   '==' : 'EQ'
   '!=' : 'NE'
   '>'  : 'GT'

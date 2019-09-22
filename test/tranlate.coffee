@@ -544,3 +544,80 @@ describe 'translate section', ()->
     ;
     """#"
     make_test text_i, text_o
+  
+  it 'fn call', ()->
+    text_i = """
+    pragma solidity ^0.5.11;
+    
+    contract Forer {
+      function call_me(int a) public returns (int yourMom) {
+        return a;
+      }
+      function forer(int a) public returns (int yourMom) {
+        return call_me(a);
+      }
+    }
+    """#"
+    text_o = """
+    #[near_bindgen]
+    #[derive(Default, BorshDeserialize, BorshSerialize)]
+    pub struct Forer {
+      
+    }
+    #[near_bindgen]
+    impl Forer {
+      pub fn call_me(&mut self, a:i64):i64 {
+        return a;
+      }
+      pub fn forer(&mut self, a:i64):i64 {
+        return call_me(a);
+      }
+    }
+    ;
+    """#"
+    make_test text_i, text_o
+  
+  it 'struct', ()->
+    text_i = """
+    pragma solidity ^0.5.11;
+    
+    contract Struct {
+      uint public value;
+      
+        struct User {
+            uint experience;
+            uint level;
+            uint dividends;
+        }
+      
+      function ifer() public {
+        User memory u = User(1, 2, 3);
+        u.level = 20;
+      }
+    }
+    """#"
+    text_o = """
+    #[near_bindgen]
+    #[derive(Default, BorshDeserialize, BorshSerialize)]
+    pub struct User {
+      experience:u64;
+      level:u64;
+      dividends:u64;
+    }
+
+
+    #[near_bindgen]
+    #[derive(Default, BorshDeserialize, BorshSerialize)]
+    pub struct Struct {
+      let mut value:u64;
+    }
+    #[near_bindgen]
+    impl Struct {
+      pub fn ifer(&mut self):void {
+        let mut u:User = User(1, 2, 3);
+        u.level = 20;
+      }
+    }
+    ;
+    """#"
+    make_test text_i, text_o

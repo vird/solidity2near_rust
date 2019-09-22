@@ -302,10 +302,13 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
       else
         ctx.is_contract = true
       
+      struct_decl_jl = []
       var_decl_jl = []
       fn_decl_jl = []
       for v in ast.scope.list
         switch v.constructor.name
+          when 'Class_decl'
+            struct_decl_jl.push gen v, opt, ctx
           when 'Var_decl'
             res = gen v, opt, ctx
             res += ";"
@@ -317,6 +320,12 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
             throw new Error("unknown v.constructor.name = #{v.constructor.name}")
       
       if ast.is_struct
+        if fn_decl_jl.length
+          ### !pragma coverage-skip-block ###
+          throw new Error("fn decl inside struct")
+        if struct_decl_jl.length
+          ### !pragma coverage-skip-block ###
+          throw new Error("struct decl inside struct")
         """
         #[near_bindgen]
         #[derive(Default, BorshDeserialize, BorshSerialize)]
@@ -326,8 +335,11 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
         
         """
       else
+        aux_struct_decl = ""
+        aux_struct_decl = "#{join_list struct_decl_jl, ''}\n\n" if struct_decl_jl.length
+        
         """
-        #[near_bindgen]
+        #{aux_struct_decl}#[near_bindgen]
         #[derive(Default, BorshDeserialize, BorshSerialize)]
         pub struct #{ast.name} {
           #{join_list var_decl_jl, '  '}

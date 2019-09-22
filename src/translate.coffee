@@ -237,22 +237,40 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
         ctx.is_struct = true
       else
         ctx.is_contract = true
-      body = gen ast.scope, opt, ctx
+      
+      var_decl_jl = []
+      fn_decl_jl = []
+      for v in ast.scope.list
+        switch v.constructor.name
+          when 'Var_decl'
+            res = gen v, opt, ctx
+            res += ";"
+            var_decl_jl.push res
+          when 'Fn_decl_multiret'
+            fn_decl_jl.push gen v, opt, ctx
+          else
+            p v
+            throw new Error("unknown v.constructor.name = #{v.constructor.name}")
+      
       if ast.is_struct
         """
         #[near_bindgen]
         #[derive(Default, BorshDeserialize, BorshSerialize)]
         pub struct #{ast.name} {
-          #{make_tab body, "  "}
+          #{join_list var_decl_jl, "  "}
         }
         
         """
       else
-        body = gen ast.scope, opt, ctx
         """
         #[near_bindgen]
+        #[derive(Default, BorshDeserialize, BorshSerialize)]
+        pub struct #{ast.name} {
+          #{join_list var_decl_jl, '  '}
+        }
+        #[near_bindgen]
         impl #{ast.name} {
-          #{make_tab body, "  "}
+          #{join_list fn_decl_jl, "  "}
         }
         
         """

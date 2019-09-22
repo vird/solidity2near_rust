@@ -32,11 +32,15 @@ describe 'translate section', ()->
     #{translate.boilerplate}
 
     #[near_bindgen]
-    impl Summator {
+    #[derive(Default, BorshDeserialize, BorshSerialize)]
+    pub struct Summator {
       let mut value:u64;
+    }
+    #[near_bindgen]
+    impl Summator {
       pub fn test(&mut self):void {
         self.value = 1;
-      };
+      }
     }
     ;
     """#"

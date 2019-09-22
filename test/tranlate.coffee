@@ -6,6 +6,11 @@ translate           = require('../src/translate')
 
 
 make_test = (text_i, text_o_expected)->
+  text_o_expected = """
+  #{translate.boilerplate}
+  
+  #{text_o_expected}
+  """
   solidity_ast = ast_gen text_i, silent:true
   ast = solidity_to_ast4gen solidity_ast
   ast = type_inference.gen ast
@@ -29,8 +34,6 @@ describe 'translate section', ()->
     }
     """
     text_o = """
-    #{translate.boilerplate}
-
     #[near_bindgen]
     #[derive(Default, BorshDeserialize, BorshSerialize)]
     pub struct Summator {
@@ -46,3 +49,441 @@ describe 'translate section', ()->
     """#"
     make_test text_i, text_o
   
+  it 'if', ()->
+    text_i = """
+    pragma solidity ^0.5.11;
+    
+    contract Ifer {
+      uint public value;
+      
+      function ifer() public returns (uint yourMom) {
+        uint x = 5;
+        uint ret = 0;
+        if (x == 5) {
+          ret = value + x;
+        }
+        else  {
+          ret = 0;
+        }
+        return ret;
+      }
+    }
+    """
+    text_o = """
+    #[near_bindgen]
+    #[derive(Default, BorshDeserialize, BorshSerialize)]
+    pub struct Ifer {
+      let mut value:u64;
+    }
+    #[near_bindgen]
+    impl Ifer {
+      pub fn ifer(&mut self):u64 {
+        let mut x:u64 = 5;
+        let mut ret:u64 = 0;
+        if (x == 5) {
+          ret = (self.value + x);
+        } else {
+          ret = 0;
+        };
+        return ret;
+      }
+    }
+    ;
+    """#"
+    make_test text_i, text_o
+  
+  # TODO require
+  
+  it 'bool ops', ()->
+    text_i = """
+    pragma solidity ^0.5.11;
+  
+    contract Forer {
+      uint public value;
+      
+      function forer() public returns (bool yourMom) {
+        bool a;
+        bool b;
+        bool c;
+        c = !c;
+        c = a && b;
+        c = a || b;
+        return c;
+      }
+    }
+    """#"
+    text_o = """
+    #[near_bindgen]
+    #[derive(Default, BorshDeserialize, BorshSerialize)]
+    pub struct Forer {
+      let mut value:u64;
+    }
+    #[near_bindgen]
+    impl Forer {
+      pub fn forer(&mut self):bool {
+        let mut a:bool;
+        let mut b:bool;
+        let mut c:bool;
+        c = !(c);
+        c = (a && b);
+        c = (a || b);
+        return c;
+      }
+    }
+    ;
+    """#"
+    make_test text_i, text_o
+  
+  it 'uint ops', ()->
+    text_i = """
+    pragma solidity ^0.5.11;
+  
+    contract Forer {
+      uint public value;
+      
+      function forer() public returns (uint yourMom) {
+        uint a = 0;
+        uint b = 0;
+        uint c = 0;
+        bool bb;
+        c = a + b;
+        c = a - b;
+        c = a * b;
+        c = a / b;
+        c = a % b;
+        c = a & b;
+        c = a | b;
+        c = a ^ b;
+        c++;
+        ++c;
+        c--;
+        --c;
+        c = a;
+        c = ~a;
+        c += a;
+        c -= a;
+        c *= a;
+        c /= a;
+        bb = a == b;
+        bb = a != b;
+        bb = a <  b;
+        bb = a <= b;
+        bb = a >  b;
+        bb = a >= b;
+        return c;
+      }
+    }
+    """#"
+    text_o = """
+      #[near_bindgen]
+      #[derive(Default, BorshDeserialize, BorshSerialize)]
+      pub struct Forer {
+        let mut value:u64;
+      }
+      #[near_bindgen]
+      impl Forer {
+        pub fn forer(&mut self):u64 {
+          let mut a:u64 = 0;
+          let mut b:u64 = 0;
+          let mut c:u64 = 0;
+          let mut bb:bool;
+          c = (a + b);
+          c = (a - b);
+          c = (a * b);
+          c = (a / b);
+          c = (a % b);
+          c = (a & b);
+          c = (a | b);
+          c = (a ^ b);
+          c+=1;
+          c+=1;
+          c-=1;
+          c-=1;
+          c = a;
+          c = ~(a);
+          c += a;
+          c -= a;
+          c *= a;
+          c /= a;
+          bb = (a == b);
+          bb = (a != b);
+          bb = (a < b);
+          bb = (a <= b);
+          bb = (a > b);
+          bb = (a >= b);
+          return c;
+        }
+      }
+      ;
+    """#"
+    make_test text_i, text_o
+  
+  it 'int ops', ()->
+    text_i = """
+    pragma solidity ^0.5.11;
+    
+    contract Forer {
+      int public value;
+      
+      function forer() public returns (int yourMom) {
+        int a = 1;
+        int b = 1;
+        int c = 1;
+        bool bb;
+        c = -c;
+        c = ~c;
+        c = a + b;
+        c = a - b;
+        c = a * b;
+        c = a / b;
+        c = a % b;
+        c = a & b;
+        c = a | b;
+        c = a ^ b;
+        c++;
+        ++c;
+        c--;
+        --c;
+        bb = a == b;
+        bb = a != b;
+        bb = a <  b;
+        bb = a <= b;
+        bb = a >  b;
+        bb = a >= b;
+        return c;
+      }
+    }
+    """#"
+    text_o = """
+      #[near_bindgen]
+      #[derive(Default, BorshDeserialize, BorshSerialize)]
+      pub struct Forer {
+        let mut value:i64;
+      }
+      #[near_bindgen]
+      impl Forer {
+        pub fn forer(&mut self):i64 {
+          let mut a:i64 = 1;
+          let mut b:i64 = 1;
+          let mut c:i64 = 1;
+          let mut bb:bool;
+          c = -(c);
+          c = ~(c);
+          c = (a + b);
+          c = (a - b);
+          c = (a * b);
+          c = (a / b);
+          c = (a % b);
+          c = (a & b);
+          c = (a | b);
+          c = (a ^ b);
+          c+=1;
+          c+=1;
+          c-=1;
+          c-=1;
+          bb = (a == b);
+          bb = (a != b);
+          bb = (a < b);
+          bb = (a <= b);
+          bb = (a > b);
+          bb = (a >= b);
+          return c;
+        }
+      }
+      ;
+    """#"
+    make_test text_i, text_o
+  # TODO a[b]
+  # TODO maps
+  it 'while', ()->
+    text_i = """
+    pragma solidity ^0.5.11;
+    
+    contract Forer {
+      mapping (address => int) balances;
+      
+      function forer(address owner) public returns (int yourMom) {
+        int i = 0;
+        while(i < 5) {
+          i += 1;
+        }
+        return i;
+      }
+    }
+    """#"
+    text_o = """
+    #[near_bindgen]
+    #[derive(Default, BorshDeserialize, BorshSerialize)]
+    pub struct Forer {
+      let mut balances:HashMap<String,i64>;
+    }
+    #[near_bindgen]
+    impl Forer {
+      pub fn forer(&mut self, owner:String):i64 {
+        let mut i:i64 = 0;
+        while (i < 5) {
+          i += 1;
+        } ;
+        return i;
+      }
+    }
+    ;
+    """#"
+    make_test text_i, text_o
+  
+  it 'for', ()->
+    text_i = """
+    pragma solidity ^0.5.11;
+  
+    contract Forer {
+      mapping (address => int) balances;
+      
+      function forer(address owner) public returns (int yourMom) {
+        int i = 0;
+        for(i=2;i < 5;i++) {
+          i += 1;
+        }
+        return i;
+      }
+    }
+    """#"
+    text_o = """
+    #[near_bindgen]
+    #[derive(Default, BorshDeserialize, BorshSerialize)]
+    pub struct Forer {
+      let mut balances:HashMap<String,i64>;
+    }
+    #[near_bindgen]
+    impl Forer {
+      pub fn forer(&mut self, owner:String):i64 {
+        let mut i:i64 = 0;
+        i = 2;
+        while (i < 5) {
+          i += 1;
+          i+=1;
+        };
+        return i;
+      }
+    }
+    ;
+    """#"
+    make_test text_i, text_o
+  
+  it 'for no init and incr', ()->
+    text_i = """
+    pragma solidity ^0.5.11;
+  
+    contract Forer {
+      mapping (address => int) balances;
+      
+      function forer(address owner) public returns (int yourMom) {
+        int i = 0;
+        for(;i < 5;) {
+          i += 1;
+          break;
+        }
+        return i;
+      }
+    }
+    """#"
+    text_o = """
+    #[near_bindgen]
+    #[derive(Default, BorshDeserialize, BorshSerialize)]
+    pub struct Forer {
+      let mut balances:HashMap<String,i64>;
+    }
+    #[near_bindgen]
+    impl Forer {
+      pub fn forer(&mut self, owner:String):i64 {
+        let mut i:i64 = 0;
+        while (i < 5) {
+          i += 1;
+          break;
+        };
+        return i;
+      }
+    }
+    ;
+    """#"
+    make_test text_i, text_o
+  
+  it 'for init var_decl', ()->
+    text_i = """
+    pragma solidity ^0.5.11;
+    
+    contract Forer {
+      uint public value;
+      
+      function forer() public returns (uint yourMom) {
+        uint y = 0;
+        for (uint i=0; i<5; i+=1) {
+            y += 1;
+        }
+        return y;
+      }
+    }
+    """#"
+    text_o = """
+    #[near_bindgen]
+    #[derive(Default, BorshDeserialize, BorshSerialize)]
+    pub struct Forer {
+      let mut value:u64;
+    }
+    #[near_bindgen]
+    impl Forer {
+      pub fn forer(&mut self):u64 {
+        let mut y:u64 = 0;
+        let mut i:u64 = 0;
+        while (i < 5) {
+          y += 1;
+          i += 1;
+        };
+        return y;
+      }
+    }
+    ;
+    """#"
+    make_test text_i, text_o
+  
+  it 'continue break', ()->
+    text_i = """
+    pragma solidity ^0.5.11;
+    
+    contract Forer {
+      mapping (address => int) balances;
+      
+      function forer(address owner) public returns (int yourMom) {
+        int i = 0;
+        for(i=2;i < 5;i++) {
+          i += 1;
+          continue;
+          break;
+        }
+        return i;
+      }
+    }
+    """#"
+    text_o = """
+    #[near_bindgen]
+    #[derive(Default, BorshDeserialize, BorshSerialize)]
+    pub struct Forer {
+      let mut balances:HashMap<String,i64>;
+    }
+    #[near_bindgen]
+    impl Forer {
+      pub fn forer(&mut self, owner:String):i64 {
+        let mut i:i64 = 0;
+        i = 2;
+        while (i < 5) {
+          i += 1;
+          i+=1;
+          continue;
+          break;
+          i+=1;
+        };
+        return i;
+      }
+    }
+    ;
+    """#"
+    make_test text_i, text_o

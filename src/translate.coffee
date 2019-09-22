@@ -13,13 +13,16 @@ translate_type = (type)->
       'u64'
     when 'int'
       'i64'
+    when 'address'
+      'String'
+    when 'map'
+      "HashMap<#{translate_type type.nest_list[0]},#{translate_type type.nest_list[1]}>"
     else
       ### !pragma coverage-skip-block ###
       pp type
       throw new Error("unknown solidity type '#{type}'")
     
 @bin_op_name_map =
-  # NOT VFERIFIED
   ADD : '+'
   SUB : '-'
   MUL : '*'
@@ -38,31 +41,39 @@ translate_type = (type)->
   BIT_OR  : '|'
   BIT_XOR : '^'
   
-  BOOL_AND: 'and'
-  BOOL_OR : 'or'
+  BOOL_AND: '&&'
+  BOOL_OR : '||'
 
 @bin_op_name_cb_map =
-  # NOT VFERIFIED
   ASSIGN  : (a, b)-> "#{a} = #{b}"
   ASS_ADD : (a, b)-> "#{a} += #{b}"
   ASS_SUB : (a, b)-> "#{a} -= #{b}"
   ASS_MUL : (a, b)-> "#{a} *= #{b}"
   ASS_DIV : (a, b)-> "#{a} /= #{b}"
   
+  # NOT VFERIFIED
   INDEX_ACCESS : (a, b, ctx, ast)->
     "#{a}.getSome(#{b})"
 
 @un_op_name_cb_map =
-  # NOT VFERIFIED
   MINUS   : (a)->"-(#{a})"
   BOOL_NOT: (a)->"!(#{a})"
   BIT_NOT : (a)->"~(#{a})"
   BRACKET : (a)->"(#{a})"
-  # risk no bracket
-  PRE_INCR: (a)->"++#{a}"
-  POST_INCR: (a)->"#{a}++"
-  PRE_DECR: (a)->"--#{a}"
-  POST_DECR: (a)->"#{a}--"
+  
+  # PRE_INCR: (a)->"++#{a}"
+  # POST_INCR: (a)->"#{a}++"
+  # PRE_DECR: (a)->"--#{a}"
+  # POST_DECR: (a)->"#{a}--"
+  
+  PRE_INCR : (a)->"#{a}+=1"
+  POST_INCR: (a)->
+    p "NOTE please look at #{a}+=1 it was translated from postfix increment"
+    "#{a}+=1"
+  PRE_DECR : (a)->"#{a}-=1"
+  POST_DECR: (a)->
+    p "NOTE please look at #{a}-=1 it was translated from postfix decrement"
+    "#{a}-=1"
   
   # NOTE unary plus is now disallowed
   # PLUS    : (a)->"+(#{a})"
@@ -72,6 +83,7 @@ class @Gen_context
   is_contract : false
   is_struct   : false
   var_hash  : {}
+  continue_append : ''
   constructor : ()->
     @var_hash = {}
   
@@ -198,7 +210,7 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
       t    = gen ast.t, opt, ctx
       f    = gen ast.f, opt, ctx
       """
-      if (#{cond}) {
+      if #{cond} {
         #{make_tab t, '  '}
       } else {
         #{make_tab f, '  '}
@@ -209,7 +221,7 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
       cond = gen ast.cond, opt, ctx
       scope  = gen ast.scope, opt, ctx
       """
-      while (#{cond}) {
+      while #{cond} {
         #{make_tab scope, '  '}
       } 
       """
@@ -218,15 +230,31 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
       init  = if ast.init then gen ast.init, opt, ctx else ""
       cond  = gen ast.cond, opt, ctx
       incr  = if ast.incr then gen ast.incr, opt, ctx else ""
+      ctx = ctx.mk_nest()
+      ctx.continue_append = incr
       scope = gen ast.scope, opt, ctx
+      
+      aux_init = ""
+      aux_init = "#{init};\n" if init
+      
+      aux_incr = ""
+      aux_incr = "\n  #{incr};" if incr
+      
+      
       """
-      for(#{init};#{cond};#{incr}) {
-        #{make_tab scope, '  '}
+      #{aux_init}while #{cond} {
+        #{make_tab scope, '  '}#{aux_incr}
       }
       """
     
     when "Continue"
-      "continue"
+      if ctx.continue_append
+        """
+        #{ctx.continue_append};
+        continue
+        """
+      else
+        "continue"
     
     when "Break"
       "break"

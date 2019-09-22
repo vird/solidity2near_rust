@@ -21,7 +21,19 @@ translate_type = (type)->
       ### !pragma coverage-skip-block ###
       pp type
       throw new Error("unknown solidity type '#{type}'")
-    
+
+type2default_value = (type)->
+  switch type.toString()
+    when 'bool'
+      'False'
+    when 'uint'
+      '0'
+    when 'int'
+      '0'
+    when 'address'
+      '"".to_string()'
+    else
+      throw new Error("unknown solidity type '#{type}'")
 @bin_op_name_map =
   ADD : '+'
   SUB : '-'
@@ -53,7 +65,8 @@ translate_type = (type)->
   
   # NOT VFERIFIED
   INDEX_ACCESS : (a, b, ctx, ast)->
-    "#{a}.getSome(#{b})"
+    # get_mut???
+    "#{a}.get(#{b}).or_else(#{type2default_value ast.type})"
 
 @un_op_name_cb_map =
   MINUS   : (a)->"-(#{a})"
@@ -132,12 +145,35 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
     when "Const"
       switch ast.type.main
         when 'string'
-          JSON.stringify ast.val
+          JSON.stringify(ast.val)+".to_string()"
         else
           ast.val
     
     when 'Bin_op'
       ctx_lvalue = ctx.mk_nest()
+      is_assign = 0 == ast.op.indexOf 'ASS'
+      is_a_index_access = ast.a.constructor.name == 'Bin_op' and ast.a.op == 'INDEX_ACCESS'
+      
+      # Edge case custom maps getter/setter
+      if is_assign and is_a_index_access and ast.a.a.type.main == 'map'
+        _a_col = gen ast.a.a, opt, ctx_lvalue
+        _a_key = gen ast.a.b, opt, ctx_lvalue
+        if ast.op == 'ASSIGN'
+          # simple case
+          _b = gen ast.b, opt, ctx
+          return "#{_a_col}.insert(#{_a_key}, #{_b})"
+        else
+          # we need a = a op b
+          _a = gen ast.a, opt, ctx_lvalue
+          
+          synth_b = new mod_ast.Bin_op
+          synth_b.op = ast.op.replace 'ASS_', ''
+          synth_b.a  = ast.a
+          synth_b.b  = ast.b
+          synth_b.type = ast.a.type
+          _synth_b = gen synth_b, opt, ctx
+          return "#{_a_col}.insert(#{_a_key}, #{_synth_b})"
+      
       _a = gen ast.a, opt, ctx_lvalue
       _b = gen ast.b, opt, ctx
       if op = module.bin_op_name_map[ast.op]

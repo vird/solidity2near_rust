@@ -293,8 +293,65 @@ describe 'translate section', ()->
       ;
     """#"
     make_test text_i, text_o
-  # TODO a[b]
-  # TODO maps
+  
+  it 'a[b]', ()->
+    text_i = """
+    pragma solidity ^0.5.11;
+    
+    contract Forer {
+      mapping (address => uint) balances;
+      
+      function forer(address owner) public returns (uint yourMom) {
+        return balances[owner];
+      }
+    }
+    """#"
+    text_o = """
+    #[near_bindgen]
+    #[derive(Default, BorshDeserialize, BorshSerialize)]
+    pub struct Forer {
+      let mut balances:HashMap<String,u64>;
+    }
+    #[near_bindgen]
+    impl Forer {
+      pub fn forer(&mut self, owner:String):u64 {
+        return self.balances.get(owner).or_else(0);
+      }
+    }
+    ;
+    """#"
+    make_test text_i, text_o
+  
+  it 'maps', ()->
+    text_i = """
+    pragma solidity ^0.5.11;
+    
+    contract Forer {
+      mapping (address => int) balances;
+      
+      function forer(address owner) public returns (int yourMom) {
+        balances[owner] += 1;
+        return balances[owner];
+      }
+    }
+    """#"
+    text_o = """
+    #[near_bindgen]
+    #[derive(Default, BorshDeserialize, BorshSerialize)]
+    pub struct Forer {
+      let mut balances:HashMap<String,i64>;
+    }
+    #[near_bindgen]
+    impl Forer {
+      pub fn forer(&mut self, owner:String):i64 {
+        self.balances.insert(owner, (self.balances.get(owner).or_else(0) + 1));
+        return self.balances.get(owner).or_else(0);
+      }
+    }
+    ;
+    """#"
+    make_test text_i, text_o
+  
   it 'while', ()->
     text_i = """
     pragma solidity ^0.5.11;

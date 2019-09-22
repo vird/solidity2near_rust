@@ -1,0 +1,35 @@
+{
+  "name": "solidity2near_rust",
+  "version": "1.0.0",
+  "description": "solidity to NEAR protocol rust translator",
+  "main": "src/index.js",
+  "scripts": {
+    "install": "iced -o lib -c src",
+    "test": "mocha --recursive --compilers coffee:iced-coffee-script/register --require iced-coffee-coverage/register-istanbul test && istanbul report"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vird/solidity2near_rust.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/vird/solidity2near_rust/issues"
+  },
+  "homepage": "https://github.com/vird/solidity2near_rust#readme",
+  "devDependencies": {
+    "coveralls": "^2.13.0",
+    "iced-coffee-coverage": "^1.0.21",
+    "iced-coffee-script": "^108.0.13",
+    "istanbul": "^0.4.5",
+    "mocha": "^3.2.0"
+  },
+  "dependencies": {
+    "ast4gen": "github:hu2prod/ast4gen",
+    "fy": "github:hu2prod/fy",
+    "iced-runtime": "^1.0.3",
+    "solc": "^0.5.11",
+    "type": "github:hu2prod/type"
+  }
+}
